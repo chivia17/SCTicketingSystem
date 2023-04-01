@@ -26,7 +26,7 @@ contract Venue is AccessControl {
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
 
     constructor () {
-        _setupRole(ADMIN_ROLE, msg.sender);
+        _setupRole(ADMIN_ROLE, _msgSender());
     }
 
     function addVenue(bytes32 name, string memory venueAddress, uint256 capacity, string memory phone,
