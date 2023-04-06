@@ -47,7 +47,7 @@ contract Venue is AccessControl {
 
     function getVenue(bytes32 name) public view returns (bytes32, string memory,uint256, string memory,
         string memory, string memory, string memory) {
-        require(!venue[name].exists, 'Venue does not exists'); 
+        require(venue[name].exists, 'Venue does not exists'); 
 
         return (venueInfo[name].name,
             venueInfo[name].venueAddress,
@@ -69,7 +69,7 @@ contract Venue is AccessControl {
     function removeVenue(bytes32 name) public {
         require(hasRole(ADMIN_ROLE, msg.sender), "Caller is not admin");
         require(venueList.length > 0, 'Empty list');
-        require(!venue[name].exists, 'Venue does not exists');
+        require(venue[name].exists, 'Venue does not exists');
 
         _removeVenueList(name);
     }
