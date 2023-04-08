@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 
 import "./access/AccessControl.sol";
+import 'hardhat/console.sol';
 
 pragma solidity ^0.8.0;
 
@@ -10,9 +11,9 @@ contract User is AccessControl {
         uint8 age;
         bytes32 email;
         string phone;
-        bytes32 photo;
-        bytes32 voiceId;
-        bytes32 faceId;
+        string photo;
+        string voiceId;
+        string faceId;
         bool registered;
     }
 
@@ -21,8 +22,8 @@ contract User is AccessControl {
         bytes32 email;
         string phone;
         string website;
-        bytes32 voiceId;
-        bytes32 faceId;
+        string voiceId;
+        string faceId;
         bool registered;
     }
 
@@ -34,8 +35,8 @@ contract User is AccessControl {
         _setupRole(ADMIN_ROLE, msg.sender);
     }
 
-    function addUser(bytes32 name, uint8 age, bytes32 email, string memory phone, bytes32 photo,
-        bytes32 voiceId, bytes32 faceId) public {
+    function addUser(bytes32 name, uint8 age, bytes32 email, string memory phone, string memory photo,
+        string memory voiceId, string memory faceId) public {
         require(!users[msg.sender].registered, "User already registered");
 
         users[msg.sender].name = name;
@@ -49,10 +50,10 @@ contract User is AccessControl {
     }
 
     function addPromoter(address promoter, bytes32 name, bytes32 email, string memory phone, string memory website,
-        bytes32 voiceId, bytes32 faceId) public {
+        string memory voiceId, string memory faceId) public {
         require(hasRole(ADMIN_ROLE, msg.sender), "Caller is not admin");
         require(promoter != address(0x0), "Invalid user address");
-        require(!promoters[msg.sender].registered, "Promoter already registered");
+        require(!promoters[promoter].registered, "Promoter already registered");
 
         promoters[promoter].name = name;
         promoters[promoter].email = email;
@@ -78,6 +79,7 @@ contract User is AccessControl {
     function login(uint8 userType, uint8 sigV, bytes32 sigR, bytes32 sigS, bytes32 hash) external view 
         returns (bool) {
         address user = _checkSignature(sigV, sigR, sigS, hash);
+        require(user == msg.sender, "Login forbidden");
 
         if (userType == 1) {
             return users[user].registered;
@@ -86,9 +88,11 @@ contract User is AccessControl {
         }
     }
 
-    function _checkSignature(uint8 sigV, bytes32 sigR, bytes32 sigS, bytes32 hash) internal pure 
+    function _checkSignature(uint8 sigV, bytes32 sigR, bytes32 sigS, bytes32 hashedMessage) internal pure 
         returns (address) {
-        address accountAddress = ecrecover(hash, sigV, sigR, sigS);
+        bytes memory prefix = "\x19Ethereum Signed Message:\n32";
+        bytes32 prefixedHashMessage = keccak256(abi.encodePacked(prefix, hashedMessage));
+        address accountAddress = ecrecover(prefixedHashMessage, sigV, sigR, sigS);
         require(accountAddress != address(0x0));
 
         return accountAddress;
